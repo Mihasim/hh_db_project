@@ -35,13 +35,13 @@ class ParserEmployers:
         with open(employers_list, 'r', encoding="utf-8") as f:
             data_vacancies = json.load(f)
 
-            vacancies_list = []
-            for data in data_vacancies:
-                vacancies_url = data["vacancies_url"] #ссылка на вакансии
-                vacancies_data = requests.get(vacancies_url).json()
-                for vacancy in vacancies_data["items"]:
-                    vacancies_list.append(vacancy)
-            return vacancies_list
+        vacancies_list = []
+        for data in data_vacancies:
+            vacancies_url = data["vacancies_url"] #ссылка на вакансии
+            vacancies_data = requests.get(vacancies_url).json()
+            for vacancy in vacancies_data["items"]:
+                vacancies_list.append(vacancy)
+        return vacancies_list
 
     @staticmethod
     def saver(list_vacancies, file_name):
