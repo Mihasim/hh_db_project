@@ -6,13 +6,15 @@ import psycopg2
 
 class ParserEmployers:
     """
-    Получение списка работодателей с сайта hh.ru
+    Получение списка работодателей и вакансий
+    этих работадателй с сайта hh.ru.
+    Данные записываются в json файлы
     """
 
     def __init__(self, keywords: list) -> None:
         self.keywords = keywords
 
-    def employers_collector(self):
+    def employers_collector(self) -> list:
         """
         Получение списка работодателей с сайта hh.ru
         """
@@ -28,7 +30,7 @@ class ParserEmployers:
                     employers_list.append(employer)
         return employers_list
 
-    def vacancies_collector(self, employers_list):
+    def vacancies_collector(self, employers_list) -> list:
         """
         Получение списка вакансий по работодателям с сайта hh.ru
         """
@@ -43,8 +45,22 @@ class ParserEmployers:
                 vacancies_list.append(vacancy)
         return vacancies_list
 
+    def employers_data_collector(self, employers_list):
+        """
+        Запиывает данные о работодателях
+        (id, name, open_vacancies)
+        в json файл
+        """
+
+    def vacancies_data_collector(self, vacancies_list):
+        """
+        Записывает данные о вакансиях
+        (id, name, area[name], salary[from], salary[to], alternate_url, employer[name])
+        в json файл
+        """
+
     @staticmethod
-    def saver(list_vacancies, file_name):
+    def saver(list_vacancies: list, file_name: str):
         with open(file_name, 'w', encoding='utf-8') as f:
             json.dump(list_vacancies, f, indent=2, ensure_ascii=False)
         print(f'"{file_name}" сохранено')
