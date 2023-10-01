@@ -9,4 +9,4 @@ if __name__ == '__main__':
     list_employers = parser.employers_collector()
     list_vacancies = parser.vacancies_collector('employers.json')
     parser.saver(list_employers, 'employers.json')
-    #parser.saver(list_vacancies, 'vacancies.json')
+    parser.saver(list_vacancies, 'vacancies.json')

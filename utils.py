@@ -32,30 +32,17 @@ class ParserEmployers:
         """
         Получение списка вакансий по работодателям с сайта hh.ru
         """
-
         with open(employers_list, 'r', encoding="utf-8") as f:
             data_vacancies = json.load(f)
+
+            vacancies_list = []
             for data in data_vacancies:
                 vacancies_url = data["vacancies_url"] #ссылка на вакансии
-                count_vacancies = data["open_vacancies"] #колличество открытых вакансий
-                print(count_vacancies)
-                print(vacancies_url, '\n')
                 vacancies_data = requests.get(vacancies_url).json()
-            print(data_vacancies, "\n\n")
-            print(vacancies_data, "\n")
+                for vacancy in vacancies_data["items"]:
+                    vacancies_list.append(vacancy)
+            return vacancies_list
 
-        '''
-        vacancies_list = []
-        for keyword in self.keywords:
-            url = f"https://api.hh.ru/employers"
-            response = requests.get(url, params={"text": keyword,
-                                                 "per_page": 10,
-                                                 "page": 0})
-            employer = response.json()
-            vacancies_data = requests.get(employer["items"][0]["vacancies_url"]).json()  # данные о вакансиях
-            vacancies_list.append(vacancies_data)
-        return vacancies_list
-        '''
     @staticmethod
     def saver(list_vacancies, file_name):
         with open(file_name, 'w', encoding='utf-8') as f:
