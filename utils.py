@@ -91,11 +91,11 @@ class ParserEmployers:
             employers_dict = {
                 'vacancies_id': data['id'],
                 'vacancies_name': data['name'],
+                'vacancies_employer': data['employer']['name'],
                 'vacancies_salary_from': vacancies_salary_from,
                 'vacancies_salary_to': vacancies_salary_to,
                 'vacancies_area': data['area']['name'],
                 'vacancies_url': data['alternate_url'],
-                'vacancies_employer': data['employer']['name'],
             }
             vacancies_list_dict.append(employers_dict)
         print(vacancies_list_dict)
