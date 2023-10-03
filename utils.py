@@ -1,7 +1,9 @@
 import json
 
 import requests as requests
-import psycopg2
+
+
+# import psycopg2
 
 
 class ParserEmployers:
@@ -26,7 +28,7 @@ class ParserEmployers:
                                                  "page": 0})
             employers = response.json()
             for employer in employers["items"]:
-                if employer["open_vacancies"] > 0: #Выводим только те компании у которых есть открытые вакансии
+                if employer["open_vacancies"] > 0:  # Выводим только те компании у которых есть открытые вакансии
                     employers_list.append(employer)
         return employers_list
 
@@ -39,18 +41,30 @@ class ParserEmployers:
 
         vacancies_list = []
         for data in data_vacancies:
-            vacancies_url = data["vacancies_url"] #ссылка на вакансии
+            vacancies_url = data["vacancies_url"]  # ссылка на вакансии
             vacancies_data = requests.get(vacancies_url).json()
             for vacancy in vacancies_data["items"]:
                 vacancies_list.append(vacancy)
         return vacancies_list
 
-    def employers_data_collector(self, employers_list):
+    def employers_data_collector(self, employers_list) -> list[dict]:
         """
         Запиывает данные о работодателях
         (id, name, open_vacancies)
         в json файл
         """
+        with open(employers_list, 'r', encoding="utf-8") as f:
+            employers_data = json.load(f)
+        employers_list_dict = []
+        for data in employers_data:
+            employers_dict = {
+                'employer_id': data['id'],
+                'employer_name': data['name'],
+                'employer_url': data['alternate_url'],
+                'employer_open_vacancies': data['open_vacancies']
+            }
+            employers_list_dict.append(employers_dict)
+        return employers_list_dict
 
     def vacancies_data_collector(self, vacancies_list):
         """
@@ -58,6 +72,34 @@ class ParserEmployers:
         (id, name, area[name], salary[from], salary[to], alternate_url, employer[name])
         в json файл
         """
+        with open(vacancies_list, 'r', encoding="utf-8") as f:
+            vacancies_data = json.load(f)
+        vacancies_list_dict = []
+        for data in vacancies_data:
+            try:
+                vacancies_salary_from = data['salary']['from']
+            except TypeError:
+                vacancies_salary_from = 0
+
+            try:
+                vacancies_salary_to = data['salary']['to']
+                if vacancies_salary_to is None:
+                    vacancies_salary_to = 0
+            except TypeError:
+                vacancies_salary_to = 0
+
+            employers_dict = {
+                'vacancies_id': data['id'],
+                'vacancies_name': data['name'],
+                'vacancies_salary_from': vacancies_salary_from,
+                'vacancies_salary_to': vacancies_salary_to,
+                'vacancies_area': data['area']['name'],
+                'vacancies_url': data['alternate_url'],
+                'vacancies_employer': data['employer']['name'],
+            }
+            vacancies_list_dict.append(employers_dict)
+        print(vacancies_list_dict)
+        return vacancies_list_dict
 
     @staticmethod
     def saver(list_vacancies: list, file_name: str):
