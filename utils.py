@@ -98,7 +98,6 @@ class ParserEmployers:
                 'vacancies_url': data['alternate_url'],
             }
             vacancies_list_dict.append(employers_dict)
-        print(vacancies_list_dict)
         return vacancies_list_dict
 
     @staticmethod

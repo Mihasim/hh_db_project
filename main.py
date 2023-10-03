@@ -13,5 +13,8 @@ if __name__ == '__main__':
     list_vacancies = parser.vacancies_collector('employers.json')
     parser.saver(list_vacancies, 'vacancies.json')
 
-    parser.employers_data_collector('employers.json')
-    parser.vacancies_data_collector('vacancies.json')
+    employers_data = parser.employers_data_collector('employers.json')
+    parser.saver(employers_data, 'employers_data.json')
+
+    vacancies_data = parser.vacancies_data_collector('vacancies.json')
+    parser.saver(vacancies_data, 'vacancies_data.json')
