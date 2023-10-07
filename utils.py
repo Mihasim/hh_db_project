@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import requests as requests
 
@@ -88,16 +89,16 @@ class ParserEmployers:
             except TypeError:
                 vacancies_salary_to = 0
 
-            employers_dict = {
-                'vacancies_id': data['id'],
-                'vacancies_name': data['name'],
-                'vacancies_employer': data['employer']['name'],
-                'vacancies_salary_from': vacancies_salary_from,
-                'vacancies_salary_to': vacancies_salary_to,
-                'vacancies_area': data['area']['name'],
-                'vacancies_url': data['alternate_url'],
+            vacancies_dict = {
+                'vacancy_id': data['id'],
+                'vacancy_name': data['name'],
+                'vacancy_employer': data['employer']['name'],
+                'vacancy_salary_from': vacancies_salary_from,
+                'vacancy_salary_to': vacancies_salary_to,
+                'vacancy_area': data['area']['name'],
+                'vacancy_url': data['alternate_url'],
             }
-            vacancies_list_dict.append(employers_dict)
+            vacancies_list_dict.append(vacancies_dict)
         return vacancies_list_dict
 
     @staticmethod
@@ -105,6 +106,63 @@ class ParserEmployers:
         with open(file_name, 'w', encoding='utf-8') as f:
             json.dump(list_vacancies, f, indent=2, ensure_ascii=False)
         print(f'"{file_name}" сохранено')
+
+
+class DBCreator:
+    def __int__(self):
+        pass
+
+    def create_database(database_name: str, params: dict):
+        """
+        Создание базы данных и таблиц для сохранения данных о работодателях и вакансиях
+        """
+
+        conn = psycopg2.connect(dbname='postgres', **params)
+        conn.autocommit = True
+        cur = conn.cursor()
+
+        cur.execute(f"DROP DATABASE {database_name}")
+        cur.execute(f"CREATE DATABASE {database_name}")
+
+        conn.close()
+
+        conn = psycopg2.connect(dbname=database_name, **params)
+
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE employers (
+                    employer_id VARCHAR(10) PRIMARY KEY,
+                    employer_name VARCHAR(99) NOT NULL,
+                    employer_url VARCHAR(99),
+                    employer_open_vacancies INTEGER
+                )
+            """)
+        with conn.cursor() as cur:
+            cur.execute("""
+                   CREATE TABLE vacancies (
+                       vacancy_id VARCHAR(10) PRIMARY KEY,
+                       vacancy_name VARCHAR(99),
+                       employer_name VARCHAR(99) REFERENCES employers(employer_name),
+                       vacancy_area VARCHAR(99),
+                       vacancy_url VARCHAR(99),
+                   )
+               """)
+
+        conn.commit()
+        conn.close()
+
+    def save_data_to_database(data: list[dict[str, Any]], database_name: str, params: dict):
+        """
+        Сохранение данных о работодателях и вакансиях в базу данных.
+        """
+
+        conn = psycopg2.connect(dbname=database_name, **params)
+
+        with conn.cursor() as cur:
+
+
+        conn.commit()
+        conn.close()
 
 
 class DBManager:
