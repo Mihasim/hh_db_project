@@ -79,6 +79,8 @@ class ParserEmployers:
         for data in vacancies_data:
             try:
                 vacancies_salary_from = data['salary']['from']
+                if type(vacancies_salary_from) != int:
+                    vacancies_salary_from = 0
             except TypeError:
                 vacancies_salary_from = 0
 
@@ -142,7 +144,9 @@ class DBCreator:
                    CREATE TABLE vacancies (
                        vacancy_id VARCHAR(10) PRIMARY KEY,
                        vacancy_name VARCHAR(99),
-                       employer_name VARCHAR(99) UNIQUE NOT NULL REFERENCES employers(employer_name),
+                       employer_name VARCHAR(99) NOT NULL REFERENCES employers(employer_name),
+                       vacancy_salary_from INT,
+                       vacancy_salary_to INT,
                        vacancy_area VARCHAR(99),
                        vacancy_url VARCHAR(99)
                    )
@@ -151,17 +155,46 @@ class DBCreator:
         conn.commit()
         conn.close()
 
-    def save_data_to_database(data: list[dict[str, Any]], database_name: str, params: dict):
+    def save_data_to_database_empl(database_name: str, employers: list[dict[str, Any]],  params: dict):
         """
         Сохранение данных о работодателях и вакансиях в базу данных.
         """
 
         conn = psycopg2.connect(dbname=database_name, **params)
 
-        #with conn.cursor() as cur:
+        with conn.cursor() as cur:
+            for employer in employers:
+                cur.execute(
+                    """
+                    INSERT INTO employers (employer_id, employer_name, employer_url, employer_open_vacancies)
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    (employer['employer_id'], employer['employer_name'], employer['employer_url'],
+                     employer['employer_open_vacancies'])
+                )
+        conn.commit()
+        conn.close()
 
+    def save_data_to_database_vac(database_name: str, vacancies: list[dict[str, Any]],  params: dict):
+        """
+        Сохранение данных о работодателях и вакансиях в базу данных.
+        """
 
-        #conn.commit()
+        conn = psycopg2.connect(dbname=database_name, **params)
+
+        with conn.cursor() as cur:
+            for vacancy in vacancies:
+                cur.execute(
+                    """
+                    INSERT INTO vacancies (vacancy_id, vacancy_name, employer_name, 
+                    vacancy_salary_from, vacancy_salary_to, vacancy_area, vacancy_url)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (vacancy['vacancy_id'], vacancy['vacancy_name'], vacancy['vacancy_employer'],
+                     vacancy['vacancy_salary_from'], vacancy['vacancy_salary_to'],
+                     vacancy['vacancy_area'], vacancy['vacancy_url'])
+                )
+        conn.commit()
         conn.close()
 
 
