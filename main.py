@@ -1,4 +1,5 @@
-from utils import ParserEmployers
+from utils import ParserEmployers, DBCreator
+from config import config
 
 
 employer_list = ['Аптрейд', 'Точка', 'АВ Софт', 'ЭНКОСТ',
@@ -18,3 +19,7 @@ if __name__ == '__main__':
 
     vacancies_data = parser.vacancies_data_collector('vacancies.json')
     parser.saver(vacancies_data, 'vacancies_data.json')
+
+    params = config()
+
+    DBCreator.create_database('hhdb', params)

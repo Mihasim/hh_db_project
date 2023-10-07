@@ -4,7 +4,7 @@ from typing import Any
 import requests as requests
 
 
-# import psycopg2
+import psycopg2
 
 
 class ParserEmployers:
@@ -121,7 +121,7 @@ class DBCreator:
         conn.autocommit = True
         cur = conn.cursor()
 
-        cur.execute(f"DROP DATABASE {database_name}")
+        cur.execute(f"DROP DATABASE IF EXISTS {database_name}")
         cur.execute(f"CREATE DATABASE {database_name}")
 
         conn.close()
@@ -131,8 +131,8 @@ class DBCreator:
         with conn.cursor() as cur:
             cur.execute("""
                 CREATE TABLE employers (
-                    employer_id VARCHAR(10) PRIMARY KEY,
-                    employer_name VARCHAR(99) NOT NULL,
+                    employer_id VARCHAR(10) UNIQUE PRIMARY KEY ,
+                    employer_name VARCHAR(99) UNIQUE NOT NULL,
                     employer_url VARCHAR(99),
                     employer_open_vacancies INTEGER
                 )
@@ -142,9 +142,9 @@ class DBCreator:
                    CREATE TABLE vacancies (
                        vacancy_id VARCHAR(10) PRIMARY KEY,
                        vacancy_name VARCHAR(99),
-                       employer_name VARCHAR(99) REFERENCES employers(employer_name),
+                       employer_name VARCHAR(99) UNIQUE NOT NULL REFERENCES employers(employer_name),
                        vacancy_area VARCHAR(99),
-                       vacancy_url VARCHAR(99),
+                       vacancy_url VARCHAR(99)
                    )
                """)
 
@@ -158,10 +158,10 @@ class DBCreator:
 
         conn = psycopg2.connect(dbname=database_name, **params)
 
-        with conn.cursor() as cur:
+        #with conn.cursor() as cur:
 
 
-        conn.commit()
+        #conn.commit()
         conn.close()
 
 

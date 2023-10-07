@@ -163,3 +163,4 @@ cython_debug/
 .idea/
 vacancies.json
 employers.json
+database.ini
