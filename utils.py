@@ -3,7 +3,6 @@ from typing import Any
 
 import requests as requests
 
-
 import psycopg2
 
 
@@ -33,7 +32,7 @@ class ParserEmployers:
                     employers_list.append(employer)
         return employers_list
 
-    def vacancies_collector(self, employers_list) -> list:
+    def vacancies_collector(self, employers_list: str) -> list:
         """
         Получение списка вакансий по работодателям с сайта hh.ru
         """
@@ -48,7 +47,7 @@ class ParserEmployers:
                 vacancies_list.append(vacancy)
         return vacancies_list
 
-    def employers_data_collector(self, employers_list) -> list[dict]:
+    def employers_data_collector(self, employers_list: str) -> list[dict]:
         """
         Запиывает данные о работодателях
         (id, name, open_vacancies)
@@ -67,7 +66,7 @@ class ParserEmployers:
             employers_list_dict.append(employers_dict)
         return employers_list_dict
 
-    def vacancies_data_collector(self, vacancies_list):
+    def vacancies_data_collector(self, vacancies_list: str) -> list[dict]:
         """
         Записывает данные о вакансиях
         (id, name, area[name], salary[from], salary[to], alternate_url, employer[name])
@@ -104,31 +103,32 @@ class ParserEmployers:
         return vacancies_list_dict
 
     @staticmethod
-    def saver(list_vacancies: list, file_name: str):
+    def saver(list_vacancies: list, file_name: str) -> None:
         with open(file_name, 'w', encoding='utf-8') as f:
             json.dump(list_vacancies, f, indent=2, ensure_ascii=False)
         print(f'"{file_name}" сохранено')
 
 
 class DBCreator:
-    def __int__(self):
-        pass
+    def __init__(self, database_name: str, params: dict) -> None:
+        self.database_name = database_name
+        self.params = params
 
-    def create_database(database_name: str, params: dict):
+    def create_database(self) -> None:
         """
         Создание базы данных и таблиц для сохранения данных о работодателях и вакансиях
         """
 
-        conn = psycopg2.connect(dbname='postgres', **params)
+        conn = psycopg2.connect(dbname='postgres', **self.params)
         conn.autocommit = True
         cur = conn.cursor()
 
-        cur.execute(f"DROP DATABASE IF EXISTS {database_name}")
-        cur.execute(f"CREATE DATABASE {database_name}")
+        cur.execute(f"DROP DATABASE IF EXISTS {self.database_name}")
+        cur.execute(f"CREATE DATABASE {self.database_name}")
 
         conn.close()
 
-        conn = psycopg2.connect(dbname=database_name, **params)
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
 
         with conn.cursor() as cur:
             cur.execute("""
@@ -155,12 +155,12 @@ class DBCreator:
         conn.commit()
         conn.close()
 
-    def save_data_to_database_empl(database_name: str, employers: list[dict[str, Any]],  params: dict):
+    def save_data_to_database_empl(self, employers: list[dict[str, Any]]) -> None:
         """
         Сохранение данных о работодателях и вакансиях в базу данных.
         """
 
-        conn = psycopg2.connect(dbname=database_name, **params)
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
 
         with conn.cursor() as cur:
             for employer in employers:
@@ -175,12 +175,12 @@ class DBCreator:
         conn.commit()
         conn.close()
 
-    def save_data_to_database_vac(database_name: str, vacancies: list[dict[str, Any]],  params: dict):
+    def save_data_to_database_vac(self, vacancies: list[dict]) -> None:
         """
         Сохранение данных о работодателях и вакансиях в базу данных.
         """
 
-        conn = psycopg2.connect(dbname=database_name, **params)
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
 
         with conn.cursor() as cur:
             for vacancy in vacancies:
@@ -199,37 +199,104 @@ class DBCreator:
 
 
 class DBManager:
-    def __init__(self):
-        pass
+    def __init__(self, database_name: str, params: dict) -> None:
+        self.database_name = database_name
+        self.params = params
 
-    def get_companies_and_vacancies_count(self):
-        '''
+    def get_companies_and_vacancies_count(self) -> None:
+        """
         получает список всех компаний и количество вакансий у каждой компании.
-        :return:
-        '''
+        """
+        print('\n\nсписок всех компаний и количество вакансий у каждой компании')
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT employer_name, employer_open_vacancies FROM employers
+                """
+            )
+            rows = cur.fetchall()
+            for row in rows:
+                print(row)
+        conn.close()
 
-    def get_all_vacancies(self):
-        '''
+    def get_all_vacancies(self) -> None:
+        """
         получает список всех вакансий с указанием названия компании,
         названия вакансии и зарплаты и ссылки на вакансию.
-        :return:
-        '''
+        """
+        print('\n\nСписок всех вакансий с указанием названия компании, '
+              'названия вакансии и зарплаты и ссылки на вакансию.')
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT employer_name, vacancy_name, vacancy_salary_from, vacancy_url FROM vacancies
+                """
+            )
+            rows = cur.fetchall()
+            for row in rows:
+                print(row)
+        conn.close()
 
-    def get_avg_salary(self):
-        '''
+    def get_avg_salary(self) -> None:
+        """
         получает среднюю зарплату по вакансиям.
-        :return:
-        '''
+        """
+        print('\n\nсредняя зарплата по вакансиям.')
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT AVG(vacancy_salary_from) 
+                FROM vacancies
+                WHERE vacancy_salary_from > 0
+                """
+            )
+            rows = cur.fetchall()
+            for row in rows:
+                print(row)
+        conn.close()
 
-    def get_vacancies_with_higher_salary(self):
-        '''
+    def get_vacancies_with_higher_salary(self) -> None:
+        """
         получает список всех вакансий, у которых зарплата выше средней по всем вакансиям.
-        :return:
-        '''
+        """
+        print('\n\nсписок всех вакансий, у которых зарплата выше средней по всем вакансиям.')
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+            SELECT vacancy_name, vacancy_salary_from
+            FROM vacancies
+            WHERE vacancy_salary_from > (
+                SELECT AVG(vacancy_salary_from) 
+                FROM vacancies
+                WHERE vacancy_salary_from > 0)
+	        """
+            )
+            rows = cur.fetchall()
+            for row in rows:
+                print(row)
+        conn.close()
 
-    def get_vacancies_with_keyword(self):
-        '''
+    def get_vacancies_with_keyword(self) -> None:
+        """
         получает список всех вакансий, в названии которых
         содержатся переданные в метод слова, например python.
-        :return:
-        '''
+        """
+        print('\n\nСписок всех вакансий, в названии которых '
+              'содержатся переданные в метод слова, например python.')
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT *
+                FROM vacancies
+                WHERE vacancy_name LIKE '%Python%' OR vacancy_name LIKE '%python%'
+                """
+            )
+            rows = cur.fetchall()
+            for row in rows:
+                print(row)
+        conn.close()
